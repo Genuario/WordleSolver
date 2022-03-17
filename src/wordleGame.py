@@ -1,10 +1,8 @@
 from enum import Enum
 import constants
-class WordleGame:
-    def __init__(self, guessesPerGame, wordLength):
+class WordleGame
         self.guessesPerGame = guessesPerGame
         self.wordLength = wordLength
-        print("hello alex")
         self.loadWordFiles()
         self.resetGame()
 
@@ -13,7 +11,6 @@ class WordleGame:
         self.winningWords = set(self.readFile("..\wordle-nyt-answers-alphabetical.txt"))
         # allowed words doesn't contain any winning words
         self.allowedWords = self.allowedWords.union(self.winningWords)
-        print("bouta go cray")
         print(self.winningWords)
 
     def readFile(self, fileName):
@@ -65,50 +62,35 @@ class WordleGame:
         # then the first 2 e's should return NOT_IN_WORD.
         for i, guessedLetter in enumerate(word):
             winningLetter = self.winningWord[i]
-
-            print("letter is " + guessedLetter + " winning letter is " + winningLetter)
             if guessedLetter == winningLetter:
                 guessResults.insert(i, GuessResult.EXACT)
                 winningWordCharSet.remove(guessedLetter)
-
-
+        
         # Next, check for IN_WORD letters
         for i, guessedLetter in enumerate(word):
             winningLetter = self.winningWord[i]
             if guessedLetter in winningWordCharSet:
-                # if the same letter is guessed twice, we should
-                # track this
                 winningWordCharSet.remove(guessedLetter)
                 guessResults.insert(i, GuessResult.IN_WORD)
 
-        print(guessResults)
         if len(self.guesses) == self.guessesPerGame:
             self.gameOver = True
-
-
-
-        
-
+        print("exit guess")
 
 class GuessResult(Enum):
     NOT_IN_WORD = 0
     IN_WORD = 1
     EXACT = 2
-
-
-            
-
-
     
 
 game = WordleGame(constants.NUM_GUESS_PER_GAME, constants.WORD_LENGTH)
 game.startGame()
-game.guessWord("heath")
-game.guessWord("heath")
-game.guessWord("heath")
-game.guessWord("heath")
-game.guessWord("heath")
-game.guessWord("heath")
+game.guessWord("these")
+game.guessWord("blueberries")
+game.guessWord("trees")
+game.guessWord("please")
+game.guessWord("alive")
+game.guessWord("tones")
+game.guessWord("friend")
 
 game.guessWord("pizza")
-game.guessWord("Dorthy")
