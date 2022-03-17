@@ -1,6 +1,8 @@
 from enum import Enum
+import random
 import constants
-class WordleGame
+class WordleGame:
+    def __init__(self, guessesPerGame, wordLength):
         self.guessesPerGame = guessesPerGame
         self.wordLength = wordLength
         self.loadWordFiles()
@@ -9,19 +11,18 @@ class WordleGame
     def loadWordFiles(self):
         self.allowedWords = set(self.readFile("..\wordle-allowed-guesses.txt"))
         self.winningWords = set(self.readFile("..\wordle-nyt-answers-alphabetical.txt"))
-        # allowed words doesn't contain any winning words
+        # allowed words doesn't contain any winning words, so union the two
         self.allowedWords = self.allowedWords.union(self.winningWords)
-        print(self.winningWords)
 
     def readFile(self, fileName):
-        fileObj = open(fileName, "r") #opens the file in read mode
-        words = fileObj.read().splitlines() #puts the file into an array
+        fileObj = open(fileName, "r")
+        words = fileObj.read().splitlines()
         fileObj.close()
         return words
 
     def resetGame(self):
         self.guesses = []
-        self.winningWord = "pizza"
+        self.winningWord = self.getNewWinningWord()
         self.gameOver = False
         self.victory = False
 
@@ -30,31 +31,50 @@ class WordleGame
         self.resetGame()
         print(self.wordLength)
     
-    def guessWord(self, word):
-        print("guessed word " + word)
+    def getNewWinningWord(self):
+        win = random.choice(list(self.winningWords))
+        print("winning word is " + win)
+        return win
+
+    def isValidGuess(self, word):
+        if len(word) != self.wordLength:
+            print("Invalid word length")
+            return False
+        if not self.isAllowedWord(word):
+            print("Word is not allowed")
+            return False
+        return True
+        
+    def checkGameOver(self):
         if self.gameOver:
             if self.victory:
                 print("You already won")
             else:
                 print("You already lost")
-            return False
-        if len(word) != self.wordLength:
-            print("Invalid word length")
-            return False
-        
+            return True
+        return False
+    
+    def isAllowedWord(self, word):
+        return word in self.allowedWords
+
+    def guessWord(self, word):
+        print("\nguessed word " + word)
         print(self.guesses)
+        if self.checkGameOver() or not self.isValidGuess(word):
+            print("exit1")
+            return False
         if word == self.winningWord:
             print("Victory!")
             self.victory = True
             self.gameOver = True
             return True
+        print("hello")
         self.guesses.append(word)
-        guessResults = [GuessResult.NOT_IN_WORD * 5]
-        
+        guessResults = [GuessResult.NOT_IN_WORD] * 5
         winningWordCharSet = set(self.winningWord)
 
         # First, check for exact letters,
-        # Removing them from the winningWordCharSet as we go
+        # removing them from the winningWordCharSet as we go.
         # We need to do this to ensure we don't get false
         # positive IN_WORD letters.
         # For example, if the wining word is 'xxxee'
@@ -75,7 +95,7 @@ class WordleGame
 
         if len(self.guesses) == self.guessesPerGame:
             self.gameOver = True
-        print("exit guess")
+        print(guessResults)
 
 class GuessResult(Enum):
     NOT_IN_WORD = 0
@@ -86,11 +106,11 @@ class GuessResult(Enum):
 game = WordleGame(constants.NUM_GUESS_PER_GAME, constants.WORD_LENGTH)
 game.startGame()
 game.guessWord("these")
+game.guessWord("xxxxx")
 game.guessWord("blueberries")
-game.guessWord("trees")
-game.guessWord("please")
+game.guessWord("nicer")
+game.guessWord("tiger")
 game.guessWord("alive")
 game.guessWord("tones")
-game.guessWord("friend")
-
+game.guessWord("pines")
 game.guessWord("pizza")
