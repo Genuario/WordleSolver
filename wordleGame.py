@@ -1,16 +1,21 @@
 from enum import Enum
 import random
+from typing import Dict
 import constants
 class WordleGame:
-    def __init__(self, guessesPerGame, wordLength):
+    NOT_IN_WORD = 0
+    IN_WORD = 1
+    EXACT = 2
+
+    def __init__(self, guessesPerGame = constants.NUM_GUESS_PER_GAME, wordLength = constants.WORD_LENGTH):
         self.guessesPerGame = guessesPerGame
         self.wordLength = wordLength
         self.loadWordFiles()
         self.resetGame()
 
     def loadWordFiles(self):
-        self.allowedWords = set(self.readFile("..\wordle-allowed-guesses.txt"))
-        self.winningWords = set(self.readFile("..\wordle-nyt-answers-alphabetical.txt"))
+        self.allowedWords = set(self.readFile("wordle-allowed-guesses.txt"))
+        self.winningWords = set(self.readFile("wordle-nyt-answers-alphabetical.txt"))
         # allowed words doesn't contain any winning words, so union the two
         self.allowedWords = self.allowedWords.union(self.winningWords)
 
@@ -20,20 +25,22 @@ class WordleGame:
         fileObj.close()
         return words
 
-    def resetGame(self):
+    def resetGame(self, winningWord = None):
         self.guesses = []
-        self.winningWord = self.getNewWinningWord()
+        if winningWord is None:
+            self.winningWord = self.getNewWinningWord()
+        else:
+            self.winningWord = winningWord
         self.gameOver = False
         self.victory = False
 
     def startGame(self):
-        print("starting game")
+        # print("starting game")
         self.resetGame()
-        print(self.wordLength)
     
     def getNewWinningWord(self):
         win = random.choice(list(self.winningWords))
-        print("winning word is " + win)
+        # print("winning word is " + win)
         return win
 
     def isValidGuess(self, word):
@@ -57,21 +64,35 @@ class WordleGame:
     def isAllowedWord(self, word):
         return word in self.allowedWords
 
+
+    '''
+    Guess a word. 
+    Returns
+      'True' when game is won
+      'False when guess is invalid
+      'None' when game is over'
+      'Array of int' when guess is valid but none-winning, where
+         0: letter is not in word
+         1: letter is in word, but in another position
+         2: letter is correct
+    '''
     def guessWord(self, word):
-        print("\nguessed word " + word)
-        print(self.guesses)
-        if self.checkGameOver() or not self.isValidGuess(word):
-            print("exit1")
+        # print("\nguessed word " + word)
+        if self.checkGameOver():
+            return None
+        if not self.isValidGuess(word):
             return False
         if word == self.winningWord:
-            print("Victory!")
             self.victory = True
             self.gameOver = True
             return True
-        print("hello")
         self.guesses.append(word)
-        guessResults = [GuessResult.NOT_IN_WORD] * 5
-        winningWordCharSet = set(self.winningWord)
+        guessResults = [self.NOT_IN_WORD] * 5
+        winningWordCharMap = dict()
+        for i, letter in enumerate(self.winningWord):
+            if winningWordCharMap.get(letter) is None:
+                winningWordCharMap[letter] = 0
+            winningWordCharMap[letter] = winningWordCharMap[letter] + 1
 
         # First, check for exact letters,
         # removing them from the winningWordCharSet as we go.
@@ -83,34 +104,22 @@ class WordleGame:
         for i, guessedLetter in enumerate(word):
             winningLetter = self.winningWord[i]
             if guessedLetter == winningLetter:
-                guessResults.insert(i, GuessResult.EXACT)
-                winningWordCharSet.remove(guessedLetter)
+                guessResults[i] = self.EXACT
+                winningWordCharMap[guessedLetter] = winningWordCharMap[guessedLetter] - 1
         
         # Next, check for IN_WORD letters
         for i, guessedLetter in enumerate(word):
             winningLetter = self.winningWord[i]
-            if guessedLetter in winningWordCharSet:
-                winningWordCharSet.remove(guessedLetter)
-                guessResults.insert(i, GuessResult.IN_WORD)
+            if winningWordCharMap.get(guessedLetter) is not None and winningWordCharMap.get(guessedLetter) > 0:
+                winningWordCharMap[guessedLetter] = winningWordCharMap[guessedLetter] - 1
+                guessResults[i] = self.IN_WORD
 
         if len(self.guesses) == self.guessesPerGame:
             self.gameOver = True
-        print(guessResults)
+        return guessResults
 
-class GuessResult(Enum):
-    NOT_IN_WORD = 0
-    IN_WORD = 1
-    EXACT = 2
-    
+# class GuessResult(Enum):
+#     NOT_IN_WORD = 0
+#     IN_WORD = 1
+#     EXACT = 2
 
-game = WordleGame(constants.NUM_GUESS_PER_GAME, constants.WORD_LENGTH)
-game.startGame()
-game.guessWord("these")
-game.guessWord("xxxxx")
-game.guessWord("blueberries")
-game.guessWord("nicer")
-game.guessWord("tiger")
-game.guessWord("alive")
-game.guessWord("tones")
-game.guessWord("pines")
-game.guessWord("pizza")
