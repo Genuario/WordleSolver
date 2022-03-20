@@ -1,7 +1,6 @@
 
 class LlamaSolver:
     def __init__(self):
-        print("init")
         self.reset()
 
     def guessNextWord(self):

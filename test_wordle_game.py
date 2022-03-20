@@ -117,3 +117,16 @@ class TestWordleGame:
                         WordleGame.NOT_IN_WORD,
                         WordleGame.NOT_IN_WORD ]
         assert response == guessResults
+
+
+    def test_when_cello_and_welsh_happy(self):
+        game = WordleGame()
+        game.resetGame("cello")
+        response = game.guessWord("welsh")
+        assert response is not None
+        guessResults = [WordleGame.NOT_IN_WORD,
+                        WordleGame.EXACT,
+                        WordleGame.EXACT,
+                        WordleGame.NOT_IN_WORD,
+                        WordleGame.NOT_IN_WORD ]
+        assert response == guessResults

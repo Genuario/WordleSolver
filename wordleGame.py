@@ -112,7 +112,8 @@ class WordleGame:
             winningLetter = self.winningWord[i]
             if winningWordCharMap.get(guessedLetter) is not None and winningWordCharMap.get(guessedLetter) > 0:
                 winningWordCharMap[guessedLetter] = winningWordCharMap[guessedLetter] - 1
-                guessResults[i] = self.IN_WORD
+                if guessResults[i] == self.NOT_IN_WORD:
+                    guessResults[i] = self.IN_WORD
 
         if len(self.guesses) == self.guessesPerGame:
             self.gameOver = True
