@@ -130,3 +130,27 @@ class TestWordleGame:
                         WordleGame.NOT_IN_WORD,
                         WordleGame.NOT_IN_WORD ]
         assert response == guessResults
+
+    def test_when_jetty_and_eerie_happy(self):
+        game = WordleGame()
+        game.resetGame("jetty")
+        response = game.guessWord("eerie")
+        assert response is not None
+        guessResults = [WordleGame.NOT_IN_WORD,
+                        WordleGame.EXACT,
+                        WordleGame.NOT_IN_WORD,
+                        WordleGame.NOT_IN_WORD,
+                        WordleGame.NOT_IN_WORD ]
+        assert response == guessResults
+
+    def test_when_melee_and_eerie_happy(self):
+        game = WordleGame()
+        game.resetGame("melee")
+        response = game.guessWord("eerie")
+        assert response is not None
+        guessResults = [WordleGame.IN_WORD,
+                        WordleGame.EXACT,
+                        WordleGame.NOT_IN_WORD,
+                        WordleGame.NOT_IN_WORD,
+                        WordleGame.EXACT ]
+        assert response == guessResults

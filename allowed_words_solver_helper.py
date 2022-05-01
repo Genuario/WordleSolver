@@ -1,5 +1,7 @@
 
+from pickle import NONE
 import random
+from re import L
 from constants import WORD_LENGTH
 from wordleGame import WordleGame
 import string
@@ -9,21 +11,19 @@ class AllowedWordsSolverHelper:
     def __init__(self):
         self.reset()
 
-    def guessNextWord(self):
-        ## self.getCharFrequency(self.allowedWords)
-        guess = random.choice(list(self.allowedWords))
-
-        self.guesses.append(guess)
-        return guess
-
     def reset(self):
         self.guessResults = []
         self.guesses = []
         game = WordleGame()
+        self.allowedGuesses = game.allowedWords
         self.allowedWords = game.winningWords # todo make allowed
+        self.winningWords = game.winningWords # todo make allowed
         self.exactLetters = [None] * 5
         self.initPossibleLetters()
-        self.requiredLetters = set()
+        self.requiredLetters = []
+        self.updateUnknownLettersRemaining()
+        self.updateUnknownLettersRemainingWordMap()
+        self.vowels = ['a', 'e', 'i', 'o', 'u']
 
     def initPossibleLetters(self):
         self.possibleLetters = []
@@ -32,35 +32,112 @@ class AllowedWordsSolverHelper:
             for l in list(string.ascii_lowercase):
                 self.possibleLetters[i].add(l)
 
+    def isUnknownLetter(self, letter):
+        return letter not in self.requiredLetters
+    
     def isLetterInGuess(self, guess, letter):
         for l in guess:
             if letter == l:
                 return True
         return False
+
+    def getFreqCounts(self, letterArray):
+        counts = dict()
+        for letter in letterArray:
+            if letter not in counts:
+                counts[letter] = 0
+            counts[letter] = counts[letter] + 1
+        return counts
+
+
+    # given two dicts, merge them together, then return in array form    
+    def mergeFreqCounts(self, dictOld, dictNew):
+        counts = dictOld
+        for key in dictNew:
+            oldCount = 0
+            if key in counts:
+                oldCount = counts[key]
+            counts[key] = max(oldCount, dictNew[key])
+
+        flattenArray = []
+        for key in counts:
+            count = counts[key]
+            for i in range(count):
+                flattenArray.append(key)
+        return flattenArray
     
+    def updateRequiredLetters(self, newRequiredLetters):
+        dictOld = self.getFreqCounts(newRequiredLetters)
+        dictNew = self.getFreqCounts(self.requiredLetters)
+        self.requiredLetters = self.mergeFreqCounts(dictOld, dictNew)
+
     def processGuessResult(self, guess, results, winningWord):
+        # print(results)
         self.guessResults.append(results)
+        newRequiredLetters = []
         for i, result in enumerate(results):
             letter = guess[i]
             if result == WordleGame.EXACT:
                 self.exactLetters[i] = letter
+                newRequiredLetters.append(letter)
             elif result == WordleGame.IN_WORD:
                 if letter in self.possibleLetters[i]:
                     self.possibleLetters[i].remove(letter)
-                if not letter in self.requiredLetters:
-                    self.requiredLetters.add(letter)
+                # if not letter in self.requiredLetters:
+                newRequiredLetters.append(letter)
             elif result == WordleGame.NOT_IN_WORD:
-                for j in range(WORD_LENGTH):
-                    if not self.isLetterInGuess(guess, letter):
+                if letter in self.requiredLetters or letter in newRequiredLetters:
+                    if letter in self.possibleLetters[i]:
+                        self.possibleLetters[i].remove(letter)
+                else:
+                    # print("removing letter as possibility " + letter )
+                    for j in range(WORD_LENGTH):
+                        # if not self.isLetterInGuess(guess, letter): # todo melee eerie
                         if letter in self.possibleLetters[j]:
                             self.possibleLetters[j].remove(letter)
-        
-        self.allowedWords.remove(guess)
+
+             # wining word: melee
+             # guess eexxx
+             # resp = 12000
+        self.updateRequiredLetters(newRequiredLetters)
+
+        if guess in self.allowedWords:
+            # print("FAILURE " + guess)
+            self.allowedWords.remove(guess)
         self.updateRemainingWords(winningWord)
+
+        # Check if we know a letter because all remaining words share that letter
+        self.checkIfKnowMoreLetters()
+        self.updateUnknownLettersRemaining()
         c = winningWord in self.allowedWords
         if c is False:
             print("BAD STATE " + winningWord)
+            print(self.exactLetters)
+            print("\n possible \n")
+            print(self.possibleLetters)
 
+    def checkIfOnlyOneLetter(self, letterIndex):
+        if self.exactLetters[letterIndex] != None:
+            return None
+        sharedLetter = None
+        for word in self.allowedWords:
+            newLetter = word[letterIndex]
+            if sharedLetter == None:
+                sharedLetter = newLetter
+            else:
+                if newLetter != sharedLetter:
+                    return None
+        return sharedLetter
+
+    def checkIfKnowMoreLetters(self):
+        for letterIndex in range(WORD_LENGTH):
+            sharedLetter = self.checkIfOnlyOneLetter(letterIndex)
+            if sharedLetter != None:
+                self.exactLetters[letterIndex] = sharedLetter
+                if sharedLetter not in self.requiredLetters:
+                    self.requiredLetters.append(sharedLetter)
+                # print("FOUND A SHARED LETTER " + sharedLetter)
+        # print(self.exactLetters)
     def updateRemainingWords(self, winningWord):
         newAllowedWords = []
         # Remove non exact characters
@@ -71,28 +148,78 @@ class AllowedWordsSolverHelper:
         # print("allowed words before " + str(len(self.allowedWords)) + " after " + str(len(newAllowedWords)))
         self.allowedWords = newAllowedWords
 
-            
+    def getNumMatchedLetters(self):
+        count = 0
+        for l in self.requiredLetters:
+            if l != None:
+                count = count + 1
+        return count
+
     def isAllowedWord(self, word, winningWord):
-        seenRequiredLetters = set()
+        doLog = word == winningWord
+        # if doLog:
+        #     print("requiredLetters")
+        #     print(self.requiredLetters)
+        countBefore = len(self.requiredLetters)
+        unseenRequiredLetters = self.requiredLetters.copy()
         for i, letter in enumerate(word):
             if self.exactLetters[i] is not None:
                 if letter != self.exactLetters[i]:
+                    if doLog:
+                        print("BAD exact letter bad " + str(i) + " " + letter)
                     return False
             elif not letter in self.possibleLetters[i]:
+                if doLog:
+                    print("BAD possible letter bad " + str(i) + " " + letter + " desired=" + winningWord[i])
                 return False
-            if letter in self.requiredLetters:
-                seenRequiredLetters.add(letter)
+            if letter in unseenRequiredLetters:
+                unseenRequiredLetters.remove(letter)
+                # if doLog:
+                #     print("remove letter good " + str(i) + " " + letter)
+                # seenRequiredLetters.add(letter)
 
-        return len(seenRequiredLetters) == len(self.requiredLetters)
+        # print("bagel " + str(countBefore))
+        if countBefore != len(self.requiredLetters):
+            print("VERY BAD")
+        if doLog:
+            r = len(unseenRequiredLetters) != 0
+            if r:
+                print("removing")
+                print(unseenRequiredLetters)
+        return len(unseenRequiredLetters) == 0
+        # return len(seenRequiredLetters) == len(self.requiredLetters)
 
-    def getCharFrequency(self, words):
-        freqMap = dict()
-        for i in range(WORD_LENGTH):
-            freqMap[i] = dict()
+    def updateUnknownLettersRemaining(self):
+        unknownLettersLeft = set()
+
+        # getFreqCounts
+        for word in self.allowedWords:
+            unseenRequiredLetters = self.requiredLetters.copy()
+            for letter in word:
+                if letter not in unseenRequiredLetters: # unknown letter
+                    unknownLettersLeft.add(letter)
+                else:
+                    unseenRequiredLetters.remove(letter)
         
-        for word in words:
-            for i, letter in word:
-                if freqMap[i].get(letter) is None:
-                    freqMap[i][letter] = 0
-                freqMap[i][letter] = freqMap[i][letter] + 1
-        return freqMap
+        self.unknownLettersRemaining = unknownLettersLeft
+    
+    # Maps remaining unknown letters to the word they're from
+    def updateUnknownLettersRemainingWordMap(self):
+        unknownLettersWordMap = dict()
+
+        if len(self.allowedWords) >= 0:
+            self.unknownLettersRemainingWordMap = unknownLettersWordMap
+            return
+
+        # getFreqCounts
+        for word in self.allowedWords:
+            unseenRequiredLetters = self.requiredLetters.copy()
+            for letter in word:
+                if letter not in unseenRequiredLetters: # unknown letter
+                    if unknownLettersWordMap.get(letter) == None:
+                         unknownLettersWordMap[letter] = set()
+                    unknownLettersWordMap[letter].add(word)
+                else:
+                    unseenRequiredLetters.remove(letter)
+        
+        self.unknownLettersRemainingWordMap = unknownLettersWordMap
