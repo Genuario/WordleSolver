@@ -1,5 +1,5 @@
 # WordleSolver
-Simulate and optimally solve Wordle. Uses the NYTimes winning words and allowed guesses txt files.
+Always win in Wordle! Simulates and optimizes to never lose. Uses the NYTimes winning words and allowed guesses txt files.
 
 
 ## How to play
