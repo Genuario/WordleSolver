@@ -9,7 +9,7 @@ Open your favorite Wordle web browser. The game will provide the best word for y
 
 ## How to run simulations
 
-Simulate running all words. The StrategyRunner will take in a stragegy, which simply exposes a `guessNextWord` function. Using that strategy, it will simulate a Wordle Game for each winning word, and log the results.
+Simulate running all words. The StrategyRunner will take in a stragegy, which simply exposes a `guessNextWord` function. Using that strategy, it will simulate a Wordle Game for each winning word and log the results.
 
 `python .\run_strategies.py`
 
