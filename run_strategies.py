@@ -20,23 +20,29 @@ class StrategyRunner:
         for x in range(NUM_GUESS_PER_GAME):
             gameOver = self.guessWord(game, strat, winningWord)
             if gameOver:
-                return True
+                return x
         
     
     def runStrategyForAllWinningWords(self, strat, saveLosingWords):
-        numWinningWords = len(self.winningWords)
+        words = self.winningWords
+        numWinningWords = len(words)
         losingWords = []
         print("Starting simulation for all " + str(numWinningWords) + " winning words ")
         winCount = 0
         lossCount = 0
         soFar = 0
         game = WordleGame()
-        for word in self.winningWords:
+        guessesToWin = [0] * NUM_GUESS_PER_GAME
+        for word in words:
             game.resetGame(word)
             # game.resetGame()
             strat.reset()
-            self.runGame(game, strat, game.winningWord)
-
+            numGuesses = self.runGame(game, strat, game.winningWord)
+            if numGuesses == None:
+                print("WTF")
+                print(game.winningWord)
+                print(numGuesses)
+            guessesToWin[numGuesses] = 1 + guessesToWin[numGuesses]
 
             if game.victory:
                 winCount = winCount + 1
@@ -48,6 +54,9 @@ class StrategyRunner:
             soFar = soFar + 1
             if (soFar % 100) == 0:
                 print("processed " + str(soFar) + "/" + str(numWinningWords))
+        print("Guesses to win distribution:")
+        for num, numGuesses in enumerate(guessesToWin):
+            print(str(num+1) + ": " + str(numGuesses))
         losingWords.sort()
         print(losingWords)
         print("Simulation results:\nwins: " + str(winCount) + " losses: " +  str(lossCount))
@@ -61,6 +70,7 @@ class StrategyRunner:
 s = StrategyRunner()
 strat = AvoidLossSolver()
 s.runStrategyForAllWinningWords(strat, True)
+
 game = WordleGame()
 vic = True
 # while vic:

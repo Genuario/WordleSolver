@@ -16,8 +16,8 @@ class AllowedWordsSolverHelper:
         self.guesses = []
         game = WordleGame()
         self.allowedGuesses = game.allowedWords
-        self.allowedWords = game.winningWords # todo make allowed
-        self.winningWords = game.winningWords # todo make allowed
+        self.allowedWords = game.winningWords
+        self.winningWords = game.winningWords
         self.exactLetters = [None] * 5
         self.initPossibleLetters()
         self.requiredLetters = []
@@ -50,7 +50,7 @@ class AllowedWordsSolverHelper:
         return counts
 
 
-    # given two dicts, merge them together, then return in array form    
+    # Given two dicts, merge them together, then return in array form    
     def mergeFreqCounts(self, dictOld, dictNew):
         counts = dictOld
         for key in dictNew:
@@ -72,7 +72,6 @@ class AllowedWordsSolverHelper:
         self.requiredLetters = self.mergeFreqCounts(dictOld, dictNew)
 
     def processGuessResult(self, guess, results, winningWord):
-        # print(results)
         self.guessResults.append(results)
         newRequiredLetters = []
         for i, result in enumerate(results):
@@ -90,31 +89,21 @@ class AllowedWordsSolverHelper:
                     if letter in self.possibleLetters[i]:
                         self.possibleLetters[i].remove(letter)
                 else:
-                    # print("removing letter as possibility " + letter )
+                    # Remove the letter as a possibility
                     for j in range(WORD_LENGTH):
-                        # if not self.isLetterInGuess(guess, letter): # todo melee eerie
                         if letter in self.possibleLetters[j]:
                             self.possibleLetters[j].remove(letter)
-
-             # wining word: melee
-             # guess eexxx
-             # resp = 12000
+            else:
+                print("Invalid result entered!" + result)
         self.updateRequiredLetters(newRequiredLetters)
 
         if guess in self.allowedWords:
-            # print("FAILURE " + guess)
             self.allowedWords.remove(guess)
         self.updateRemainingWords(winningWord)
 
         # Check if we know a letter because all remaining words share that letter
         self.checkIfKnowMoreLetters()
         self.updateUnknownLettersRemaining()
-        c = winningWord in self.allowedWords
-        if c is False:
-            print("BAD STATE " + winningWord)
-            print(self.exactLetters)
-            print("\n possible \n")
-            print(self.possibleLetters)
 
     def checkIfOnlyOneLetter(self, letterIndex):
         if self.exactLetters[letterIndex] != None:
@@ -136,8 +125,7 @@ class AllowedWordsSolverHelper:
                 self.exactLetters[letterIndex] = sharedLetter
                 if sharedLetter not in self.requiredLetters:
                     self.requiredLetters.append(sharedLetter)
-                # print("FOUND A SHARED LETTER " + sharedLetter)
-        # print(self.exactLetters)
+
     def updateRemainingWords(self, winningWord):
         newAllowedWords = []
         # Remove non exact characters
@@ -145,7 +133,6 @@ class AllowedWordsSolverHelper:
             resp = self.isAllowedWord(word, winningWord)
             if resp is True:
                 newAllowedWords.append(word)
-        # print("allowed words before " + str(len(self.allowedWords)) + " after " + str(len(newAllowedWords)))
         self.allowedWords = newAllowedWords
 
     def getNumMatchedLetters(self):
@@ -157,9 +144,6 @@ class AllowedWordsSolverHelper:
 
     def isAllowedWord(self, word, winningWord):
         doLog = word == winningWord
-        # if doLog:
-        #     print("requiredLetters")
-        #     print(self.requiredLetters)
         countBefore = len(self.requiredLetters)
         unseenRequiredLetters = self.requiredLetters.copy()
         for i, letter in enumerate(word):
@@ -169,7 +153,7 @@ class AllowedWordsSolverHelper:
                         print("BAD exact letter bad " + str(i) + " " + letter)
                     return False
             elif not letter in self.possibleLetters[i]:
-                if doLog:
+                if doLog and winningWord:
                     print("BAD possible letter bad " + str(i) + " " + letter + " desired=" + winningWord[i])
                 return False
             if letter in unseenRequiredLetters:

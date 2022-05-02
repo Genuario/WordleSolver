@@ -1,9 +1,6 @@
 
-import random
-from unittest import TextTestRunner
 from allowed_words_solver_helper import AllowedWordsSolverHelper
 from constants import WORD_LENGTH
-from wordleGame import WordleGame
 
 class AvoidLossSolver:
     def __init__(self):
@@ -12,7 +9,7 @@ class AvoidLossSolver:
         self.bestSecondGuess = "fungi"
 
     def guessNextWord(self):
-        doPrint = False # Set this to True to get 
+        doPrint = False # Set this to True to debug
         guess = None
         # Because the best first guess will be the same for every game, 
         # we can determine the value once and set it for all games.
@@ -43,7 +40,6 @@ class AvoidLossSolver:
                 print(unknown)
             if wordsLeft < 10:
                 print(self.allowedWordsHelper.allowedWords)
-                print(freqMap)
 
         self.guesses.append(guess)
         return guess
@@ -223,7 +219,6 @@ class AvoidLossSolver:
     def reset(self):
         self.allowedWordsHelper = AllowedWordsSolverHelper()
         self.guesses = []
-        game = WordleGame()
 
     def processGuessResult(self, guess, results, winningWord):
         self.allowedWordsHelper.processGuessResult(guess, results, winningWord)
