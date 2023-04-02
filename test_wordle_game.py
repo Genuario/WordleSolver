@@ -1,5 +1,5 @@
 # import pytest
-from wordleGame import WordleGame
+from wordle_game import WordleGame
 
 class TestWordleGame:
     def test_can_create_wordle_game(self):

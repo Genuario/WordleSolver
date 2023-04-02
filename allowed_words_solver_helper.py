@@ -3,7 +3,7 @@ from pickle import NONE
 import random
 from re import L
 from constants import WORD_LENGTH
-from wordleGame import WordleGame
+from wordle_game import WordleGame
 import string
 
 

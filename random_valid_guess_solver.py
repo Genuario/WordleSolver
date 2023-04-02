@@ -2,7 +2,7 @@
 import random
 from allowed_words_solver_helper import AllowedWordsSolverHelper
 from constants import WORD_LENGTH
-from wordleGame import WordleGame
+from wordle_game import WordleGame
 
 class RandomValidGuessSolver:
     def __init__(self):

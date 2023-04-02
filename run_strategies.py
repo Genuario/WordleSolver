@@ -1,7 +1,7 @@
 from random_valid_guess_solver import RandomValidGuessSolver
 from constants import NUM_GUESS_PER_GAME
 from avoid_loss_solver import AvoidLossSolver
-from wordleGame import WordleGame
+from wordle_game import WordleGame
 
 class StrategyRunner:
     def __init__(self):
