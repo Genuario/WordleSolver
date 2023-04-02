@@ -36,3 +36,9 @@ This solver optimizes to never lose. Consequently, for easier words, it may make
 
 ### Commits
 Use https://gitmoji.dev/
+
+### Testing
+Use pytest
+```
+python -m pytest .\test_wordle_game.py
+```

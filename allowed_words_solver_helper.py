@@ -15,9 +15,9 @@ class AllowedWordsSolverHelper:
         self.guessResults = []
         self.guesses = []
         game = WordleGame()
-        self.allowedGuesses = game.allowedWords
-        self.allowedWords = game.winningWords
-        self.winningWords = game.winningWords
+        self.allowedGuesses = game.wordDict.allowedWords
+        self.allowedWords = game.wordDict.winningWords
+        self.winningWords = game.wordDict.winningWords
         self.exactLetters = [None] * 5
         self.initPossibleLetters()
         self.requiredLetters = []

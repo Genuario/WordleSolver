@@ -1,7 +1,8 @@
 from enum import Enum
-import random
-from typing import Dict
 import constants
+
+from wordle_word_dictionary import WordleWordDictionary
+
 class WordleGame:
     NOT_IN_WORD = 0
     IN_WORD = 1
@@ -10,25 +11,22 @@ class WordleGame:
     def __init__(self, guessesPerGame = constants.NUM_GUESS_PER_GAME, wordLength = constants.WORD_LENGTH):
         self.guessesPerGame = guessesPerGame
         self.wordLength = wordLength
-        self.loadWordFiles()
+        self.loadWordleDictionary()
         self.resetGame()
 
-    def loadWordFiles(self):
-        self.allowedWords = set(self.readFile("wordle-allowed-guesses.txt"))
-        self.winningWords = set(self.readFile("wordle-nyt-answers-alphabetical.txt"))
-        # allowed words doesn't contain any winning words, so union the two
-        self.allowedWords = self.allowedWords.union(self.winningWords)
+    def loadWordleDictionary(self):
+        self.wordDict = WordleWordDictionary(self.wordLength)
 
-    def readFile(self, fileName):
-        fileObj = open(fileName, "r")
-        words = fileObj.read().splitlines()
-        fileObj.close()
-        return words
+    # def readFile(self, fileName):
+    #     fileObj = open(fileName, "r")
+    #     words = fileObj.read().splitlines()
+    #     fileObj.close()
+    #     return words
 
     def resetGame(self, winningWord = None):
         self.guesses = []
         if winningWord is None:
-            self.winningWord = self.getNewWinningWord()
+            self.winningWord = self.wordDict.getNewWinningWord()
         else:
             self.winningWord = winningWord
         self.gameOver = False
@@ -37,32 +35,16 @@ class WordleGame:
     def startGame(self):
         # print("starting game")
         self.resetGame()
-    
-    def getNewWinningWord(self):
-        win = random.choice(list(self.winningWords))
-        # print("winning word is " + win)
-        return win
-
-    def isValidGuess(self, word):
-        if len(word) != self.wordLength:
-            print("Invalid word length")
-            return False
-        if not self.isAllowedWord(word):
-            print("Word is not allowed")
-            return False
-        return True
         
     def checkGameOver(self):
-        if self.gameOver:
-            if self.victory:
-                print("You already won")
-            else:
-                print("You already lost")
-            return True
-        return False
-    
-    def isAllowedWord(self, word):
-        return word in self.allowedWords
+        if not self.gameOver:
+            return False
+
+        if self.victory:
+            print("You already won")
+        else:
+            print("You already lost")
+        return True
 
 
     '''
@@ -80,7 +62,7 @@ class WordleGame:
         # print("\nguessed word " + word)
         if self.checkGameOver():
             return None
-        if not self.isValidGuess(word):
+        if not self.wordDict.isValidGuess(word):
             return False
         if word == self.winningWord:
             self.victory = True
